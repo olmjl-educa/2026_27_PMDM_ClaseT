@@ -24,3 +24,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "ProyectoClaseT"
 include(":contenedores")
+include(":botones")
