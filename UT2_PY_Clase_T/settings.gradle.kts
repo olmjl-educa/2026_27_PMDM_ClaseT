@@ -22,7 +22,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "ProyectoClaseT"
+rootProject.name = "UT2_PY_Clase_T"
 include(":contenedores")
 include(":botones")
 include(":formulario")
