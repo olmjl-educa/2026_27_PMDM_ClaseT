@@ -68,20 +68,29 @@ fun FormularioRegistro(modifier: Modifier = Modifier) {
     var telefono by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
-    var mensaje by remember() { mutableStateOf("") }
+    //var mensaje by remember() { mutableStateOf("") }
     var acepta by remember { mutableStateOf(false) }
     val opciones = listOf("Presencial", "Online", "Mixta")
     var modalidad by remember { mutableStateOf(opciones[0]) }
+
+    // DEFINICIÓN DE ERRORES Y VALIDACIÓN DEL FORMULARIO
     // El nombre se considera erróneo si está vacío o solo contiene espacios.
     var nombreError = nombre.isBlank()
     // Se quitan espacios al principio y al final antes de comprobar el formato del email.
     var emailError = !Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches()
     // La contraseña debe tener al menos 6 caracteres.
     var errorPassword = password.length < 6
+
+    // Control de la edad
+    //val edadInt = edad.toIntOrNull()
+    var edadError =  edad.toIntOrNull() == null || edad.toInt() < 16 || edad.toInt() > 99
+
     // Para enviar correctamente, nombre, email y contraseña deben ser válidos y hay que aceptar los términos.
-    var formularioValido = !nombreError && !errorPassword && !emailError && acepta
+    var formularioValido = !nombreError && !errorPassword && !emailError && !edadError && acepta
     // Los errores se muestran después de pulsar «Registrarse», no mientras se empieza a escribir.
     var intentoEnvio by remember { mutableStateOf(false) }
+
+    var registroCorrecto by remember { mutableStateOf(false) }
 
     var curso by remember { mutableStateOf("") }
     var expandido by remember { mutableStateOf(false) }
@@ -110,13 +119,14 @@ fun FormularioRegistro(modifier: Modifier = Modifier) {
             OutlinedTextField(
                 value = nombre,
                 onValueChange = { nombre = it },
-                label = { Text("Nombre") },
+                label = { Text("Nombre *") },
                 // El campo se marca como erróneo solo tras intentar enviar y si el nombre está vacío.
                 isError = intentoEnvio && nombreError,
 
                 supportingText = {
                     // El mensaje de nombre obligatorio aparece bajo la misma condición que el error visual.
                     if (nombreError && intentoEnvio) Text("Nombre obligatorio")
+                    else Text("* Obligatorio")
                 },
                 placeholder = { Text("Introduce tu nombre") },
                 singleLine = true,
@@ -135,10 +145,16 @@ fun FormularioRegistro(modifier: Modifier = Modifier) {
             OutlinedTextField(
                 value = edad,
                 onValueChange = { edad = it },
-                label = { Text("Edad") },
-                placeholder = { Text("Introduce tu edad") },
+                label = { Text("Edad *") },
+                placeholder = { Text("Introduce tu edad *") },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
+                isError = intentoEnvio && edadError,
+                supportingText = {
+                    // Se explica el error únicamente después del intento de envío.
+                    if (edadError && intentoEnvio) Text("La edad no es válida (debe ser un número entre 16 y 99)")
+                    else Text("* Obligatorio")
+                },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Number, imeAction = ImeAction.Next
                 )
@@ -159,7 +175,7 @@ fun FormularioRegistro(modifier: Modifier = Modifier) {
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
-                label = { Text("Correo electrónico") },
+                label = { Text("Correo electrónico *") },
                 placeholder = { Text("Introduce tu correo electrónico") },
                 // Se marca el email como erróneo tras intentar enviar si no tiene un formato válido.
                 isError = intentoEnvio && emailError,
@@ -167,6 +183,7 @@ fun FormularioRegistro(modifier: Modifier = Modifier) {
                 supportingText = {
                     // Se explica el error únicamente después del intento de envío.
                     if (emailError && intentoEnvio) Text("El email no es válido")
+                    else Text("* Obligatorio")
                 },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
@@ -178,13 +195,14 @@ fun FormularioRegistro(modifier: Modifier = Modifier) {
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
-                label = { Text("Contraseña") },
+                label = { Text("Contraseña *") },
                 // La contraseña se señala como errónea tras intentar enviar si tiene menos de 6 caracteres.
                 isError = intentoEnvio && errorPassword,
 
                 supportingText = {
                     // El texto indica el requisito mínimo cuando la contraseña no lo cumple.
                     if (errorPassword && intentoEnvio) Text("La contraseña debe contener mínimo 6 caracteres")
+                    else Text("* Obligatorio")
                 },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
@@ -198,7 +216,10 @@ fun FormularioRegistro(modifier: Modifier = Modifier) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 // El checkbox guarda si se han aceptado los términos; sin marcarlo, el formulario no es válido.
                 Checkbox(checked = acepta, onCheckedChange = { acepta = it })
-                Text("Acepto los términos")
+                Text("Acepto los términos *")
+            }
+            if (intentoEnvio && !acepta) {
+                Text("Debes aceptar los términos y condiciones", color = MaterialTheme.colorScheme.error)
             }
             Text("Modalidad: ")
             for (opcion in opciones) {
@@ -243,16 +264,18 @@ fun FormularioRegistro(modifier: Modifier = Modifier) {
             }
 
             // Al pulsar, se habilita la presentación de errores y se evalúa formularioValido.
-            Button(onClick = { intentoEnvio = true }, modifier = Modifier.fillMaxWidth()) {
+            Button(
+                onClick = {
+                    intentoEnvio = true
+                    registroCorrecto = formularioValido
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
                 Text("Registrarse")
+            }
 
-            }
-//        Text(mensaje)
-            // El registro correcto solo se muestra si se intentó enviar y todos los campos requeridos son válidos.
-            if (formularioValido && intentoEnvio) Text("Registro correcto")
-            Button(onClick = { mensaje = "" }, modifier = Modifier.fillMaxWidth()) {
-                Text("Reiniciar")
-            }
+            if (registroCorrecto) Text("Registro correcto")
+
         }
 
     }
